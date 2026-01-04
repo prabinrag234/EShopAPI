@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EShopAPI.Controller
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/user")]
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
