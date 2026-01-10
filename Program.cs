@@ -32,7 +32,7 @@ catch (Exception ex)
     Console.WriteLine($"Seeding error: {ex.Message}");
 }
 
-app.MapGet("/", () => "API Server UP!");
+app.MapGet("/", () => "API Online!");
 app.UseCors("AllowAll");
 app.MapControllers();
 app.Run();
