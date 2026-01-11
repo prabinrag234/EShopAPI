@@ -16,7 +16,7 @@ namespace EShopAPI.DBContext
                 var admin = new Users
                 {
                     Username = "admin",
-                    Email = "admin@example.com",
+                    Email = "admin@admin.com",
                     FullName = "Admin User",
                     PasswordHash = hasher.HashPassword(null, "admin123"),
                     PhoneNumber = "1234567890",
@@ -32,26 +32,6 @@ namespace EShopAPI.DBContext
             else
             {
                 logger.LogInformation("Admin user already exists.");
-            }
-
-            if (!context.Roles.Any())
-            {
-                context.Roles.AddRange(
-                    new Role { Name = "Admin" },
-                    new Role { Name = "Customer" }
-                );
-                context.SaveChanges();
-                logger.LogInformation("Roles seeded.");
-            }
-
-            if (!context.Products.Any())
-            {
-                context.Products.AddRange(
-                    new Product { Name = "Laptop", Price = 1200.00M, Description = "High-performance laptop" },
-                    new Product { Name = "Mouse", Price = 25.50M, Description = "Wireless mouse" }
-                );
-                context.SaveChanges();
-                logger.LogInformation("Products seeded.");
             }
         }
     }
