@@ -21,15 +21,26 @@ namespace EShopAPI.Controller
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Email);
+            if (request == null)
+                return BadRequest("Invalid request");
+
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+                return BadRequest("Email and password are required");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
             if (user == null)
                 return NotFound("User not found");
+
+            if (string.IsNullOrEmpty(user.PasswordHash))
+                return StatusCode(500, "Password hash missing");
 
             var hasher = new PasswordHasher<Users>();
             var result = hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
 
             if (result == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid credentials");
+
 
             return Ok(new
             {
