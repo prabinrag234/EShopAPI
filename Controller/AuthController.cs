@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EShopAPI.Controller
 {
     [ApiController]
-    [Route("user")]
+    [Route("eshop/user")]
     public class AuthController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -40,7 +40,6 @@ namespace EShopAPI.Controller
 
             if (result == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid credentials");
-
 
             return Ok(new
             {

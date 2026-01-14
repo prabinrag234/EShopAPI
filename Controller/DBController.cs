@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace EShopAPI.Controller
 {
     [ApiController]
-    [Route("[controller]")]
     public class TestController : ControllerBase
     {
         private readonly AppDbContext _context;
