@@ -1,3 +1,4 @@
+using EShopAPI.BaseLibrary;
 using EShopAPI.DBContext;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
+builder.Services.AddSingleton<PasswordHasher>();
 
 builder.Services.AddControllers();
 
