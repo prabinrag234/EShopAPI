@@ -14,13 +14,13 @@ namespace EShopAPI.Controller
     [Route("eshop/user")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context; 
-        private readonly PasswordHasher _hasher;
+        private readonly AppDbContext _context;
+        private readonly PasswordHasher<Users> _hasher;
 
-        public AuthController(AppDbContext context, PasswordHasher hasher)
+        public AuthController(AppDbContext context)
         {
             _context = context;
-            _hasher = hasher;
+            _hasher = new PasswordHasher<Users>();
         }
 
         [HttpPost("login")]
@@ -93,12 +93,13 @@ namespace EShopAPI.Controller
             {
                 Username = dto.Username,
                 Email = dto.Email,
-                PasswordHash = _hasher.Hash(dto.Password),
                 FullName = dto.FullName,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsActive = true
             };
+
+            user.PasswordHash = _hasher.HashPassword(user, dto.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
