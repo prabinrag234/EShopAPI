@@ -13,25 +13,25 @@ namespace EShopAPI.Models
         [Required]
         [MaxLength(50)]
         [Column("username")]
-        public string Username { get; set; }
+        public string ?Username { get; set; }
 
         [Required]
         [MaxLength(100)]
         [EmailAddress]
         [Column("email")]
-        public string Email { get; set; }
+        public string ?Email { get; set; }
 
         [Required]
         [Column("password_hash")]
-        public string PasswordHash { get; set; }
+        public string ?PasswordHash { get; set; }
 
         [MaxLength(100)]
         [Column("full_name")]
-        public string FullName { get; set; }
+        public string ?FullName { get; set; }
 
         [MaxLength(20)]
         [Column("phone_number")]
-        public string PhoneNumber { get; set; }
+        public string ?PhoneNumber { get; set; }
 
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
@@ -42,5 +42,4 @@ namespace EShopAPI.Models
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
-
 }
