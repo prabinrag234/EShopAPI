@@ -56,14 +56,39 @@ namespace EShopAPI.Controller
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
-            // Check if username exists
+            if (dto == null)
+                return BadRequest(new { errors = new[] { "Invalid request payload" } });
+
+            var errors = new List<string>();
+
+            // Basic field validation
+            if (string.IsNullOrWhiteSpace(dto.Username))
+                errors.Add("Username is required");
+
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                errors.Add("Email is required");
+
+            if (string.IsNullOrWhiteSpace(dto.Password))
+                errors.Add("Password is required");
+
+            if (string.IsNullOrWhiteSpace(dto.FullName))
+                errors.Add("Full name is required");
+
+            // Stop early if basic validation fails
+            if (errors.Count > 0)
+                return BadRequest(new { errors });
+
+            // Database uniqueness checks
             if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
-                return BadRequest("Username already exists");
+                errors.Add("Username already exists");
 
-            // Check if email exists
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-                return BadRequest("Email already registered");
+                errors.Add("Email already registered");
 
+            if (errors.Count > 0)
+                return BadRequest(new { errors });
+
+            // Create user
             var user = new Users
             {
                 Username = dto.Username,
@@ -80,6 +105,7 @@ namespace EShopAPI.Controller
 
             return Ok(new { message = "Registration successful" });
         }
+
 
     }
 
