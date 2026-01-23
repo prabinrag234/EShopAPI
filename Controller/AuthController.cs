@@ -2,7 +2,6 @@
 using EShopAPI.Helpers;
 using EShopAPI.Models;
 using EShopAPI.Requiests;
-using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
