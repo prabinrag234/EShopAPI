@@ -145,11 +145,26 @@ namespace EShopAPI.Controller
 
             var accessTokenString = new JwtSecurityTokenHandler().WriteToken(newAccessToken);
 
+            // OPTIONAL: rotate refresh token
+            var newRefreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            token.Token = newRefreshToken;
+            token.ExpiresAt = DateTime.UtcNow.AddDays(7);
+            await _context.SaveChangesAsync();
+
             return Ok(new
             {
-                access_token = accessTokenString
+                accessToken = accessTokenString,
+                refreshToken = newRefreshToken,
+                user = new
+                {
+                    user.Id,
+                    user.Username,
+                    user.Email,
+                    Role = "User"
+                }
             });
         }
+
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] string refreshToken)
