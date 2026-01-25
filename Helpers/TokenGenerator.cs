@@ -10,5 +10,4 @@ namespace EShopAPI.Helpers
             return Convert.ToBase64String(bytes);
         }
     }
-
 }

@@ -11,11 +11,14 @@ using System.Text;
 
 namespace EShopAPI.Controller
 {
+    /// <summary>
+    /// Handles authentication, session, and token-related operations.
+    /// </summary>
     [ApiController]
     [Route("auth")]
     public class AuthController : ControllerBase
     {
-        private readonly IConfiguration _config; 
+        private readonly IConfiguration _config;
         private readonly AppDbContext _context;
 
         public AuthController(IConfiguration config, AppDbContext context)
@@ -24,6 +27,9 @@ namespace EShopAPI.Controller
             _context = context;
         }
 
+        /// <summary>
+        /// Authenticates a user with email and password, returns access + refresh tokens and user info.
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -33,24 +39,22 @@ namespace EShopAPI.Controller
             if (user == null)
                 return Unauthorized(new { message = "Invalid email or password" });
 
-            // Validate password
             var hashed = PasswordHasher.Hash(request.Password);
             if (hashed != user.PasswordHash)
                 return Unauthorized(new { message = "Invalid email or password" });
 
-            // Generate JWT
             var jwtSection = _config.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.Username),
-        new Claim("email", user.Email),
-        new Claim("role", "User")
-    };
-            // Create the token
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim("email", user.Email),
+                new Claim("role", "User")
+            };
+
             var token = new JwtSecurityToken(
                 issuer: jwtSection["Issuer"],
                 audience: jwtSection["Audience"],
@@ -61,11 +65,11 @@ namespace EShopAPI.Controller
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            // Create refresh token
             var refreshToken = new RefreshToken
             {
                 UserId = user.Id,
                 Token = TokenGenerator.GenerateRefreshToken(),
+                CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddDays(30)
             };
 
@@ -74,8 +78,8 @@ namespace EShopAPI.Controller
 
             return Ok(new
             {
-                access_token = tokenString,
-                refresh_token = refreshToken.Token,
+                accessToken = tokenString,
+                refreshToken = refreshToken.Token,
                 user = new
                 {
                     user.Id,
@@ -85,10 +89,12 @@ namespace EShopAPI.Controller
             });
         }
 
+        /// <summary>
+        /// Registers a new user with email, username, and password.
+        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            // Check if email already exists
             var existingUser = await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
@@ -109,6 +115,9 @@ namespace EShopAPI.Controller
             return Ok(new { message = "User registered successfully" });
         }
 
+        /// <summary>
+        /// Refreshes an access token using a valid refresh token and rotates the refresh token.
+        /// </summary>
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
         {
@@ -122,18 +131,17 @@ namespace EShopAPI.Controller
             if (user == null)
                 return Unauthorized();
 
-            // Generate new access token
             var jwtSection = _config.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.Username),
-        new Claim("email", user.Email),
-        new Claim("role", "User")
-    };
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim("email", user.Email),
+                new Claim("role", "User")
+            };
 
             var newAccessToken = new JwtSecurityToken(
                 issuer: jwtSection["Issuer"],
@@ -145,10 +153,9 @@ namespace EShopAPI.Controller
 
             var accessTokenString = new JwtSecurityTokenHandler().WriteToken(newAccessToken);
 
-            // OPTIONAL: rotate refresh token
-            var newRefreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            var newRefreshToken = TokenGenerator.GenerateRefreshToken();
             token.Token = newRefreshToken;
-            token.ExpiresAt = DateTime.UtcNow.AddDays(7);
+            token.ExpiresAt = DateTime.UtcNow.AddDays(30);
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -158,14 +165,15 @@ namespace EShopAPI.Controller
                 user = new
                 {
                     user.Id,
-                    user.Username,
                     user.Email,
-                    Role = "User"
+                    user.Username
                 }
             });
         }
 
-
+        /// <summary>
+        /// Logs out from the current session by revoking the given refresh token.
+        /// </summary>
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] string refreshToken)
         {
@@ -181,6 +189,9 @@ namespace EShopAPI.Controller
             return Ok(new { message = "Logged out successfully" });
         }
 
+        /// <summary>
+        /// Logs out from all active sessions for a given user.
+        /// </summary>
         [HttpPost("logout-all")]
         public async Task<IActionResult> LogoutAll([FromBody] Guid userId)
         {
@@ -196,6 +207,9 @@ namespace EShopAPI.Controller
             return Ok(new { message = "Logged out from all devices" });
         }
 
+        /// <summary>
+        /// Returns all sessions (refresh tokens) for a given user, including status.
+        /// </summary>
         [HttpGet("sessions/{userId}")]
         public async Task<IActionResult> GetSessions(Guid userId)
         {
@@ -215,7 +229,5 @@ namespace EShopAPI.Controller
 
             return Ok(sessions);
         }
-
     }
-
 }
